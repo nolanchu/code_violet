@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <style type="text/css" media="screen">
+    #editor { 
+      height: 275px;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    border-bottom-right-radius: 0px;
+    margin-top: 5px;
+    }
+</style>
+
+<head>
+  <title>Building Bridges</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+
+  <script>
+    let submitEnabled = true;
+    function updateCanvas() {
+      let input = document.getElementById("input").value;
+      let xhr = new XMLHttpRequest();
+      xhr.open("POST", "/update");
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          document.getElementById("output").innerHTML = "Submission successful!";
+          submitEnabled = false;
+          document.getElementById("submit").disabled = true;
+          setTimeout(function () {
+            document.getElementById("output").innerHTML = "";
+            document.getElementById("submit").disabled = false;
+            submitEnabled = true;
+          }, 10000);
+        } else {
+          document.getElementById("output").innerHTML = "Submission failed, please try again later.";
+        }
+      };
+      xhr.send("input=" + input);
+    }
+  </script>
+  <style>
+    body {
+      background-color: lightblue;
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+      font: sans-serif;
+      font-weight: bold;
+      font-size: 36px;
+      margin-top: 50px;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      border: 1px solid black;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      box-sizing: border-box;
+      border: 2px solid lightgray;
+      border-radius: 4px;
+      font-size: 18px;
+    }
+
+    input[type="submit"] {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      box-sizing: border-box;
+      border: 2px solid lightgray;
+      border-radius: 4px;
+      font-size: 18px;
+      background-color: lightgray;
+      cursor: pointer;
+    }
+
+    #output {
+      text-align: center;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    .parent {
+      text-align: center;
+    }
+    .child {
+      display: inline-block;
+      vertical-align: middle;
+      min-width: 300px;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+  <h1>Building Bridges</h1>
+  
+  <form onsubmit="updateCanvas(); return false;">
+  <div class="parent">
+    <p id="XY">
+    </p>
+  <div class="child">
+  <canvas id="canvas" width="800" height="400"></canvas>
+</div>
+ 
+  <div class="child">
+    
+    <div id="editor"># Type your commands below:</div>
+    <textarea id="input" name="editor" style="display: none;" form="submit"></textarea>
+    <!-- <input type="text" id="input" placeholder="Enter your submission here"></input> -->
+    <input type="submit" id="submit" value="Submit"></input>
+  
+  </div>
+  
+</form>
+</div>
+  <div id="output"></div>
+  
+
+
+</body>
+<style>
+  body{
+      background: ghostwhite; 
+  }
+</style>
+<!-- <canvas id="canvas"></canvas> -->
+
+<script src = "static/vertical-platformer/js/utils.js"></script>
+<script src = "static/vertical-platformer/js/classes/CollisionBlock.js"></script>
+<script src = "static/vertical-platformer/js/classes/Sprite.js"></script>
+<script src = "static/vertical-platformer/js/classes/Player.js"></script>
+<script src = "static/vertical-platformer/js/data/collisions.js"></script>
+<script src = "static/vertical-platformer/index.js"></script>
+
+</html>
+<script>
+  // var canvas = document.getElementById("canvas");
+  canvas.addEventListener("mousemove", function(e) {
+  var divisor = 20;
+  var cRect = canvas.getBoundingClientRect();        // Gets CSS pos, and width/height
+  var canvasX = Math.round((e.clientX - cRect.left)/divisor);  // Subtract the 'left' of the canvas 
+  var canvasY = Math.round((e.clientY - cRect.top)/divisor);   // from the X/Y positions to make
+  //ctx.clearRect(0, 0, canvas.width, canvas.height);  // (0,0) the top left of the canvas
+
+  // ctx.fillText("X: "+canvasX+", Y: "+canvasY, 10, 20);
+  // document.getElementById("XY").innerHTML = "X: "+canvasX+", Y: "+canvasY;
+});
+
+
+
+</script>
+  <script src="static/src-min-noconflict/ace.js"></script>
+
+  <!-- <script src="src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script> -->
+  <script>
+      var editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/python");
+
+var textarea = document.getElementById("input");
+editor.getSession().on("change", function () {
+  console.log(textarea);
+    textarea.textContent = editor.getSession().getValue();
+    textarea.value = editor.getSession().getValue();
+    check_backend();
+});
+function check_backend() {
+  fetch("/get_data")
+    .then(response => {
+      if (response.ok) {
+        data = response.json();
+        data.then(function(result) {
+          
+          platformCollisions = result;
+          // console.log("updated2");
+        })
+        
+        updateBlocks();
+        // console.log(data);
+      }
+    })
+  }
+  var intervalId = window.setInterval(function(){
+check_backend()
+}, 1000);
+
+check_backend();
+  </script>
